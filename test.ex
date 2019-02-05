@@ -165,3 +165,49 @@ defmodule Bubble do
   end
 end
 IO.inspect Bubble.sort([1, 2, 100, 3, 4, 1, 200, 45, 6, 10]) #=> [1, 1, 2, 3, 4, 6, 10, 45, 100, 200]
+
+defmodule Merge do
+
+end
+
+defmodule Quick do
+
+end
+
+defmodule Reverse do
+
+end
+
+defmodule Fibonacci do
+
+end
+
+defmodule Inter do
+
+  def toBinary() do 32 end
+  def toBinary(x) do toBinary([], x) end
+  def toBinary(l, 0) do l end
+  def toBinary(l, x) do toBinary([rem(x,2) | l], div(x,2)) end
+
+end
+
+defmodule Binary do
+
+  def toInteger(l) do toInteger(l, 0) end
+  def toInteger([], f) do f end
+  def toInteger([x | t], f) do toInteger(t, x + f * 2) end
+
+end
+
+    def closure([], _) do [] end
+    def closure([free | t], env) do
+        case lookup(free, env) do
+            nil ->
+                :error
+            {id, str} ->
+                [{id, str} | closure(t, env)]
+        end
+    end
+
+    def args([], [], closure) do closure end
+    def args([par|restp], [str|rests], closure) do [{par, str} | args(restp, rests, closure)] end
