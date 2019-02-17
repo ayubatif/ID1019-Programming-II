@@ -1,60 +1,64 @@
 defmodule Philosopher do
-	@dream 1000
+	def timestamp do
+		{_megasec, sec, microsec} = :os.timestamp
+		sec * 1000000 + microsec
+	end
+
+	@think 1000
 	@eat 50
 	@delay 200
 
-
 	def start(hunger, right, left, name, ctrl) do 
-		philo = spawn_link(fn -> init(hunger, right, left, name, ctrl) end)
-		{:philo, philo}
+		phil = spawn_link(fn -> init(hunger, right, left, name, ctrl) end)
 	end
 
 	def init(hunger, right, left, name, ctrl) do 
-		dreaming(hunger,right,left,name,ctrl)
+		thinking(hunger,right,left,name,ctrl)
 	end
 
-	def dreaming(0, right, left, name, ctrl) do
-		IO.puts("#{name} is full")
+	def thinking(0, right, left, name, ctrl) do
+		IO.puts("#{timestamp()}: #{name} is full!")
 		send(ctrl, :done)
 	end
 
-	def dreaming(1000, right, left, name, ctrl) do
-		IO.puts("#{name} starved to death")
+	def thinking(1000, right, left, name, ctrl) do
+		IO.puts("#{timestamp()}: #{name} starved to death!")
 		send(ctrl, :done)
 	end
 
-	def dreaming(hunger, right, left, name, ctrl) do
-		IO.puts("#{name} is dreaming...")
-		sleep(@dream)
+	def thinking(hunger, right, left, name, ctrl) do
+		IO.puts("#{timestamp()}: #{name} is thinking...")
+		sleep(@think)
 		waiting(hunger, right, left, name, ctrl)
 
 	end
 
 	def waiting(hunger, right, left, name, ctrl) do 
-		IO.puts("#{name} is waiting, #{hunger}")
+		IO.puts("#{timestamp()}: #{name} is waiting, hunger level: #{hunger}.")
 
 		case Chopstick.request(left) do 
 			:ok ->
+				IO.puts("#{timestamp()}: #{name} received left chopstick!")
 				sleep(@delay)
 
 				case Chopstick.request(right) do
 					:ok ->
-						IO.puts("#{name} got sticks!")
+						IO.puts("#{timestamp()}: #{name} received both chopsticks!")
 						eating(hunger, right, left, name, ctrl)
 					end
 				end
-		IO.puts("#{name} +1")
-		dreaming(hunger+7, right, left, name, ctrl)
+		IO.puts("#{timestamp()}: #{name} +1")
+		thinking(hunger+7, right, left, name, ctrl)
 	end
 
 	def eating(hunger, right, left, name, ctrl) do
-		IO.puts("#{name} is eating")
+		IO.puts("#{timestamp()}: #{name} is eating noodles!")
 
 		sleep(@eat)
 		Chopstick.return(left)
 		Chopstick.return(right)
 
-		dreaming(hunger-1, right, left, name, ctrl)
+		thinking(hunger-1, right, left, name, ctrl)
 	end
 
 	def sleep(0) do :ok end 

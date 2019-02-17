@@ -1,17 +1,13 @@
 defmodule Chopstick do
 	
 	def start do 
-		stick = spawn_link(fn -> init() end)
-		{:stick, stick}
-	end
-
-	def init do 
-		available()
+		chopstick = spawn_link(fn -> available() end)
+		{:chopstick, chopstick}
 	end
 
 	def available() do
 		receive do 
-			{:request, from} -> send(from, :granted)
+			{:request, phil} -> send(phil, :granted)
 			gone()
 			:quit -> :ok
 		end
@@ -24,23 +20,21 @@ defmodule Chopstick do
 		end
 	end
 
-	def quit({:stick, pid}) do
-    	send(pid, :quit)
-  	end
-
-	def return({:stick, pid}) do
-		send(pid, :return)
-	end
-
-	def terminate({:stick, pid}) do send(pid, :quit) end
-
-	def request(stick = {:stick, pid}) do
+	def request({:chopstick, pid}) do
 		send(pid,{:request,self()})
-
 		receive do
 			:granted -> :ok
 		end
 	end
 
+	def quit({:chopstick, pid}) do
+    	send(pid, :quit)
+  	end
+
+	def return({:chopstick, pid}) do
+		send(pid, :return)
+	end
+
+	def terminate({:chopstick, pid}) do send(pid, :quit) end
 
 end
