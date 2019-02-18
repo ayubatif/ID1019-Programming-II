@@ -5,15 +5,15 @@ defmodule Philosopher do
 	end
 
 	@think 1000
-	@eat 50
-	@delay 200
+	@eat 500
+	@delay 50
 
 	def start(hunger, right, left, name, ctrl) do 
 		phil = spawn_link(fn -> init(hunger, right, left, name, ctrl) end)
 	end
 
 	def init(hunger, right, left, name, ctrl) do 
-		thinking(hunger,right,left,name,ctrl)
+		thinking(hunger, right, left, name, ctrl)
 	end
 
 	def thinking(0, right, left, name, ctrl) do
@@ -47,8 +47,7 @@ defmodule Philosopher do
 						eating(hunger, right, left, name, ctrl)
 					end
 				end
-		IO.puts("#{timestamp()}: #{name} +1")
-		thinking(hunger+7, right, left, name, ctrl)
+		thinking(hunger+1, right, left, name, ctrl)
 	end
 
 	def eating(hunger, right, left, name, ctrl) do
