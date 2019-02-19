@@ -20,10 +20,12 @@ defmodule Chopstick do
 		end
 	end
 
-	def request({:chopstick, pid}) do
+	def request({:chopstick, pid}, timeout) do
 		send(pid,{:request,self()})
 		receive do
 			:granted -> :ok
+		after 
+			timeout -> :no
 		end
 	end
 
@@ -34,7 +36,4 @@ defmodule Chopstick do
 	def return({:chopstick, pid}) do
 		send(pid, :return)
 	end
-
-	def terminate({:chopstick, pid}) do send(pid, :quit) end
-
 end

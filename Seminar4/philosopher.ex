@@ -4,60 +4,82 @@ defmodule Philosopher do
 		sec * 1000000 + microsec
 	end
 
-	@think 1000
+	@think 10
 	@eat 500
-	@delay 50
+	@delay 500
+	@timeout 2000
 
-	def start(hunger, right, left, name, ctrl) do 
-		phil = spawn_link(fn -> init(hunger, right, left, name, ctrl) end)
+	def start(hunger, left, right, name, ctrl) do 
+		phil = spawn_link(fn -> thinking(hunger, left, right, name, ctrl) end)
 	end
 
-	def init(hunger, right, left, name, ctrl) do 
-		thinking(hunger, right, left, name, ctrl)
-	end
-
-	def thinking(0, right, left, name, ctrl) do
-		IO.puts("#{timestamp()}: #{name} is full!")
+	def thinking(0, left, right, name, ctrl) do
+		IO.puts("#{timestamp()}: #{name} is full! hunger level: 0")
 		send(ctrl, :done)
 	end
 
-	def thinking(1000, right, left, name, ctrl) do
-		IO.puts("#{timestamp()}: #{name} starved to death!")
+	def thinking(10, left, right, name, ctrl) do
+		IO.puts("#{timestamp()}: #{name} starved to death! hunger level: 10")
 		send(ctrl, :done)
 	end
 
-	def thinking(hunger, right, left, name, ctrl) do
-		IO.puts("#{timestamp()}: #{name} is thinking...")
-		sleep(@think)
-		waiting(hunger, right, left, name, ctrl)
+	def thinking(hunger, left, right, name, ctrl) do
+		IO.puts("#{timestamp()}: #{name} is pretending to be a philosopher... hunger level: #{hunger}")
+		sleep(@think*hunger)
+		waitingAsync(hunger, left, right, name, ctrl)
 
 	end
 
-	def waiting(hunger, right, left, name, ctrl) do 
-		IO.puts("#{timestamp()}: #{name} is waiting, hunger level: #{hunger}.")
-
-		case Chopstick.request(left) do 
-			:ok ->
-				IO.puts("#{timestamp()}: #{name} received left chopstick!")
-				sleep(@delay)
-
-				case Chopstick.request(right) do
-					:ok ->
-						IO.puts("#{timestamp()}: #{name} received both chopsticks!")
-						eating(hunger, right, left, name, ctrl)
-					end
-				end
-		thinking(hunger+1, right, left, name, ctrl)
+	def waitingAsync(hunger, left, right, name, ctrl) do 
+		IO.puts("#{timestamp()}: #{name} is waiting for chopsticks... hunger level: #{hunger}")
+		request_left_chopstick = Chopstick.request(left, 2000)
+		request_right_chopstick = Chopstick.request(right, 2000)
+		
+		cond do
+			request_left_chopstick==:ok && request_right_chopstick==:ok ->
+				IO.puts("#{timestamp()}: #{name} received both chopsticks! hunger level: #{hunger}")
+				eating(hunger, left, right, name, ctrl)
+			request_left_chopstick==:ok ->
+				IO.puts("#{timestamp()}: #{name} can't get right chopstick... hunger level: #{hunger}")
+				Chopstick.return(left)
+			request_right_chopstick==:ok ->
+				Chopstick.return(right)
+				IO.puts("#{timestamp()}: #{name} can't get left chopstick... hunger level: #{hunger}")
+			true ->
+				IO.puts("#{timestamp()}: #{name} can't get chopsticks... hunger level: #{hunger}")
+				thinking(hunger+1, left, right, name, ctrl)
+		end
 	end
 
-	def eating(hunger, right, left, name, ctrl) do
-		IO.puts("#{timestamp()}: #{name} is eating noodles!")
+	# def waitingSync(hunger, left, right, name, ctrl) do 
+	# 	IO.puts("#{timestamp()}: #{name} is waiting for left chopstick. hunger level: #{hunger}")
 
+	# 	case Chopstick.request(left, 2000) do 
+	# 		:ok ->
+	# 			IO.puts("#{timestamp()}: #{name} received left chopstick! hunger level: #{hunger}")
+	# 			sleep(@delay)
+	# 			case Chopstick.request(right, 2000) do
+	# 				:ok ->
+	# 					IO.puts("#{timestamp()}: #{name} received both chopsticks! hunger level: #{hunger}")
+	# 					eating(hunger, left, right, name, ctrl)
+	# 				:no ->
+	# 					IO.puts("#{timestamp()}: #{name} was denied right chopstick! He returns left chopstick... hunger level: #{hunger+1}")
+	# 					Chopstick.return(left)
+	# 					thinking(hunger+1, left, right, name, ctrl)
+	# 			end
+	# 		:no ->
+	# 			IO.puts("#{timestamp()}: #{name} was denied left chopstick! hunger level: #{hunger+1}")
+	# 			thinking(hunger+1, left, right, name, ctrl)
+	# 	end
+	# end
+
+	def eating(hunger, left, right, name, ctrl) do
+		IO.puts("#{timestamp()}: #{name} is eating some good ICA noodles! hunger level: #{hunger-1}")
 		sleep(@eat)
 		Chopstick.return(left)
 		Chopstick.return(right)
-
-		thinking(hunger-1, right, left, name, ctrl)
+		IO.puts("#{timestamp()}: #{name} has returned their chopsticks. hunger level: #{hunger-1}")
+		thinking(hunger-1, left, right, name, ctrl)
 	end
 
 	def sleep(0) do :ok end 
